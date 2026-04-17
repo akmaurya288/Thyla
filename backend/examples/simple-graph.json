@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "input",
+      "type": "input",
+      "config": {
+        "inputKey": "user_message",
+        "value": "Hello, how are you?"
+      }
+    },
+    {
+      "id": "llm",
+      "type": "llm",
+      "config": {
+        "inputKey": "user_message",
+        "outputKey": "llm_response",
+        "model": "mock"
+      }
+    },
+    {
+      "id": "output",
+      "type": "output",
+      "config": {
+        "inputKey": "llm_response"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "input",
+      "to": "llm",
+      "outputKey": "user_message",
+      "inputKey": "user_message"
+    },
+    {
+      "from": "llm",
+      "to": "output",
+      "outputKey": "llm_response",
+      "inputKey": "input"
+    }
+  ]
+}
