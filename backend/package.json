@@ -6,10 +6,11 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node index.ts",
     "example": "ts-node examples/minimal-flow.ts",
+    "test-standalone": "ts-node examples/standalone-test.ts",
     "test": "jest",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint **/*.ts"
   },
   "keywords": [
     "ai",

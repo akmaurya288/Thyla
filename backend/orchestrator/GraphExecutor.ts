@@ -17,10 +17,19 @@ export class GraphExecutor {
     graphConfig: GraphConfig,
     sessionId: string,
     userId?: string,
-    initialState?: Record<string, any>
+    initialState?: Record<string, any>,
+    streamCallback?: (chunk: import('../types').StreamingChunk) => void
   ): Promise<Record<string, any>> {
     const context = new ExecutionContext(sessionId, userId, initialState);
     const graph = new Graph(graphConfig, this.nodeRegistry);
+    
+    // Inject stream callback if supported
+    for (const node of graph.nodes.values()) {
+      if (streamCallback && typeof (node as any).setStreamCallback === 'function') {
+        (node as any).setStreamCallback(streamCallback);
+      }
+    }
+
     const results = await graph.execute(context);
 
     // Return final outputs

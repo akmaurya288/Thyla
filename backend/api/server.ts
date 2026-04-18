@@ -15,12 +15,17 @@ export async function createServerApp(port: number = 3000): Promise<void> {
   const app = express();
   const server = createServer(app);
 
-  // Initialize Redis
-  const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
-  await redis.connect();
-
-  // Initialize session manager
-  const sessionManager = new SessionManager(redis);
+  // Initialize Redis (optional for local dev)
+  let sessionManager: SessionManager | null = null;
+  try {
+    const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
+    await redis.connect();
+    sessionManager = new SessionManager(redis);
+    console.log('Redis connected successfully');
+  } catch (error) {
+    console.warn('Redis connection failed, running without session persistence');
+    console.warn('Error:', error instanceof Error ? error.message : 'Unknown error');
+  }
 
   // Initialize graph executor with node registry
   const nodeRegistry = new Map<string, new (config: any) => Node>([
@@ -54,7 +59,9 @@ export async function createServerApp(port: number = 3000): Promise<void> {
   // Graceful shutdown
   process.on('SIGTERM', async () => {
     console.log('Shutting down gracefully...');
-    await redis.disconnect();
+    if (sessionManager) {
+      // Redis disconnect is handled by session manager if needed
+    }
     server.close(() => {
       console.log('Server closed');
       process.exit(0);

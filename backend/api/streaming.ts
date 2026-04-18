@@ -6,12 +6,12 @@ import { StreamingChunk, GraphConfig } from '../types';
 export class StreamingServer {
   private wss: WebSocketServer;
   private executor: GraphExecutor;
-  private sessionManager: SessionManager;
+  private sessionManager: SessionManager | null;
 
   constructor(
     wss: WebSocketServer,
     executor: GraphExecutor,
-    sessionManager: SessionManager
+    sessionManager: SessionManager | null
   ) {
     this.wss = wss;
     this.executor = executor;
@@ -68,19 +68,21 @@ export class StreamingServer {
     input: string
   ): Promise<void> {
     try {
-      // Get or create session
-      let session = await this.sessionManager.getSession(sessionId);
-      if (!session) {
-        session = await this.sessionManager.createSession(sessionId, userId);
-      }
+      // Get or create session (if sessionManager available)
+      if (this.sessionManager) {
+        let session = await this.sessionManager.getSession(sessionId);
+        if (!session) {
+          session = await this.sessionManager.createSession(sessionId, userId);
+        }
 
-      // Add user message to history
-      if (input) {
-        await this.sessionManager.addMessage(sessionId, {
-          role: 'user',
-          content: input,
-          timestamp: new Date()
-        });
+        // Add user message to history
+        if (input) {
+          await this.sessionManager.addMessage(sessionId, {
+            role: 'user',
+            content: input,
+            timestamp: new Date()
+          });
+        }
       }
 
       ws.send(JSON.stringify({
@@ -98,13 +100,17 @@ export class StreamingServer {
         }));
       };
 
-      // Set up streaming on LLM nodes (this would need to be integrated with GraphExecutor)
-      // For now, execute normally
-      const results = await this.executor.executeGraph(graph, sessionId, userId);
+      const results = await this.executor.executeGraph(
+        graph,
+        sessionId,
+        userId,
+        { input }, // initial state
+        streamCallback
+      );
 
-      // Add assistant response to history
+      // Add assistant response to history (if sessionManager available)
       const output = results['output'] || results['llm'];
-      if (output) {
+      if (this.sessionManager && output) {
         await this.sessionManager.addMessage(sessionId, {
           role: 'assistant',
           content: output,

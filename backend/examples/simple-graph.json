@@ -4,7 +4,7 @@
       "id": "input",
       "type": "input",
       "config": {
-        "inputKey": "user_message",
+        "outputKey": "user_message",
         "value": "Hello, how are you?"
       }
     },

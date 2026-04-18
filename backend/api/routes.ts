@@ -8,7 +8,7 @@ import { GraphConfig } from '../types';
 
 export function createRoutes(
   executor: GraphExecutor,
-  sessionManager: SessionManager
+  sessionManager: SessionManager | null
 ): express.Router {
   const router = express.Router();
 
@@ -21,27 +21,29 @@ export function createRoutes(
         return res.status(400).json({ error: 'Missing required fields: graph, sessionId' });
       }
 
-      // Get or create session
-      let session = await sessionManager.getSession(sessionId);
-      if (!session) {
-        session = await sessionManager.createSession(sessionId, userId);
-      }
+      // Get or create session (if sessionManager available)
+      if (sessionManager) {
+        let session = await sessionManager.getSession(sessionId);
+        if (!session) {
+          session = await sessionManager.createSession(sessionId, userId);
+        }
 
-      // Add user message to history
-      if (input) {
-        await sessionManager.addMessage(sessionId, {
-          role: 'user',
-          content: input,
-          timestamp: new Date()
-        });
+        // Add user message to history
+        if (input) {
+          await sessionManager.addMessage(sessionId, {
+            role: 'user',
+            content: input,
+            timestamp: new Date()
+          });
+        }
       }
 
       // Execute graph
-      const results = await executor.executeGraph(graph, sessionId, userId);
+      const results = await executor.executeGraph(graph, sessionId, userId, { input });
 
-      // Add assistant response to history
+      // Add assistant response to history (if sessionManager available)
       const output = results['output'] || results['llm'];
-      if (output) {
+      if (sessionManager && output) {
         await sessionManager.addMessage(sessionId, {
           role: 'assistant',
           content: output,
@@ -67,6 +69,9 @@ export function createRoutes(
   router.get('/session/:sessionId', async (req, res) => {
     try {
       const { sessionId } = req.params;
+      if (!sessionManager) {
+        return res.status(503).json({ error: 'Session management not available (Redis not connected)' });
+      }
       const session = await sessionManager.getSession(sessionId);
 
       if (!session) {
@@ -85,6 +90,9 @@ export function createRoutes(
   router.delete('/session/:sessionId', async (req, res) => {
     try {
       const { sessionId } = req.params;
+      if (!sessionManager) {
+        return res.status(503).json({ error: 'Session management not available (Redis not connected)' });
+      }
       await sessionManager.deleteSession(sessionId);
       res.json({ success: true });
     } catch (error) {
@@ -98,6 +106,9 @@ export function createRoutes(
   router.get('/session/:sessionId/history', async (req, res) => {
     try {
       const { sessionId } = req.params;
+      if (!sessionManager) {
+        return res.status(503).json({ error: 'Session management not available (Redis not connected)' });
+      }
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const history = await sessionManager.getConversationHistory(sessionId, limit);
       res.json(history);

@@ -42,8 +42,9 @@ export class RedisClient {
     return (await this.client.exists(key)) === 1;
   }
 
-  async hGet(hash: string, field: string): Promise<string | null> {
-    return await this.client.hGet(hash, field);
+  async hGet(hash: string, field: string): Promise<string | null | undefined> {
+    const result = await this.client.hGet(hash, field);
+    return result === undefined ? null : result;
   }
 
   async hSet(hash: string, field: string, value: string): Promise<void> {
@@ -59,7 +60,7 @@ export class RedisClient {
   }
 
   async lPush(key: string, ...values: string[]): Promise<number> {
-    return await this.client.lPush(key, ...values);
+    return await this.client.lPush(key, values);
   }
 
   async lRange(key: string, start: number, stop: number): Promise<string[]> {

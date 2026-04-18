@@ -1,105 +1,130 @@
 # Thyla
 
-Node-based AI Agent Execution Engine
-
-## Project Structure
-
-```
-thyla/
-├── backend/
-│   ├── api/              # API layer (REST + WebSocket)
-│   │   ├── routes.ts     # Express route handlers
-│   │   ├── streaming.ts  # WebSocket streaming server
-│   │   └── server.ts     # Main server setup
-│   ├── channels/         # Channel adapters for different platforms
-│   │   ├── ChannelAdapter.ts    # Base channel interface
-│   │   └── WebChatAdapter.ts     # Web chat implementation
-│   ├── core/             # Core execution engine
-│   │   ├── ExecutionContext.ts  # Execution context with state
-│   │   ├── Graph.ts              # Graph structure and topological sort
-│   │   ├── BaseNode.ts           # Base node class
-│   │   └── StreamingHandler.ts   # Token batching for streaming
-│   ├── examples/         # Example workflows
-│   │   ├── simple-graph.json     # Sample graph definition
-│   │   └── minimal-flow.ts       # Runnable minimal example
-│   ├── nodes/            # Node implementations
-│   │   ├── InputNode.ts          # Input node
-│   │   ├── LLMNode.ts            # LLM node (mocked)
-│   │   └── OutputNode.ts         # Output node
-│   ├── orchestrator/     # Graph orchestration
-│   │   └── GraphExecutor.ts      # Graph execution engine
-│   ├── state/            # State management
-│   │   ├── RedisClient.ts        # Redis client wrapper
-│   │   └── SessionManager.ts     # Session & conversation history
-│   ├── types/            # TypeScript type definitions
-│   │   └── index.ts              # Core type interfaces
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── Dockerfile
-│   └── index.ts          # Entry point
-├── frontend/             # Frontend application (placeholder)
-├── infra/               # Infrastructure configurations
-├── docker-compose.yml
-└── README.md
-```
-
-## Folder Purposes
-
-- **backend/api**: REST API endpoints and WebSocket streaming server
-- **backend/channels**: Abstractions for different communication platforms (web chat, Slack, etc.)
-- **backend/core**: Core execution engine including graph structure, context management, and node base classes
-- **backend/examples**: Sample graph definitions and runnable examples
-- **backend/nodes**: Concrete node implementations (input, LLM, output, and custom nodes)
-- **backend/orchestrator**: Graph execution engine with node registry and validation
-- **backend/state**: Session management, Redis integration, and conversation history with sliding window
-- **backend/types**: TypeScript interfaces and type definitions
-- **frontend**: Frontend application (placeholder for future implementation)
-- **infra**: Infrastructure configurations (Kubernetes, Terraform, etc.)
+Node-based AI Agent Execution Engine with Visual Builder
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- Redis 7+
-- Docker (optional)
+- npm or yarn
+- Redis 7+ (optional - for session persistence)
+- Docker (optional - for containerized setup)
 
-### Local Development
+## Backend Setup
 
-1. **Install dependencies**
-   ```bash
-   cd backend
-   npm install
-   ```
+### 1. Install Dependencies
 
-2. **Start Redis**
-   ```bash
-   docker run -d -p 6379:6379 redis:7-alpine
-   ```
+```bash
+cd backend
+npm install
+```
 
-3. **Run the minimal example**
-   ```bash
-   npm run example
-   ```
+### 2. Run Standalone Test (No Redis Required)
 
-4. **Start the API server**
-   ```bash
-   npm run dev
-   ```
+This tests the core execution engine:
+
+```bash
+npm run test-standalone
+```
+
+### 3. Start API Server
+
+Without Redis (for local development):
+```bash
+npm run dev
+```
+
+With Redis (recommended for production):
+```bash
+# Start Redis first
+docker run -d -p 6379:6379 redis:7-alpine
+
+# Then start the server
+npm run dev
+```
 
 The API server will be available at `http://localhost:3000`
 
-### Docker Setup
+## Frontend Setup
 
-1. **Start all services**
-   ```bash
-   docker-compose up
-   ```
+### 1. Install Dependencies
 
-2. **Services started**
-   - API: http://localhost:3000
-   - Redis: localhost:6379
-   - PostgreSQL: localhost:5432
+```bash
+cd frontend
+npm install
+```
+
+### 2. Start Development Server
+
+```bash
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+### 3. Use the UI
+
+1. Drag nodes from the palette to the canvas
+2. Connect nodes by dragging from handles
+3. Select nodes to configure them
+4. Click "Run Agent" to execute
+5. View results in the output console
+
+## Running Both Services
+
+To run both backend and frontend:
+
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+## Detailed Setup Instructions
+
+See [SETUP.md](SETUP.md) for comprehensive setup instructions including:
+- Docker setup
+- WebSocket usage
+- Graph definition format
+- Troubleshooting
+- Development guide
+
+## Project Structure
+
+```
+thyla/
+├── backend/
+│   ├── api/              # REST API and WebSocket server
+│   ├── channels/         # Channel adapters
+│   ├── core/             # Execution engine
+│   ├── examples/         # Example graphs and tests
+│   ├── nodes/            # Node implementations
+│   ├── orchestrator/     # Graph orchestration
+│   ├── state/            # Session management
+│   └── types/            # TypeScript types
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   │   ├── nodes/    # Custom React Flow nodes
+│   │   │   ├── NodePalette.tsx
+│   │   │   ├── ConfigPanel.tsx
+│   │   │   ├── GraphCanvas.tsx
+│   │   │   └── OutputConsole.tsx
+│   │   ├── hooks/       # Custom React hooks
+│   │   ├── services/     # API integration
+│   │   ├── types/        # TypeScript types
+│   │   ├── App.tsx       # Main application
+│   │   └── main.tsx      # Entry point
+│   └── package.json
+├── docker-compose.yml
+├── SETUP.md              # Detailed setup instructions
+└── README.md
+```
 
 ## API Endpoints
 
